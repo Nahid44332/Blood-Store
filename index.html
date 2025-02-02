@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Blood Donor Management</title>
+  <style>
+    :root {
+      --bg-color: #f8f9fa;
+      --text-color: #000;
+      --container-bg: #fff;
+      --header-color: #dc3545;
+      --btn-add-bg: #28a745;
+      --btn-edit-bg: #ffc107;
+      --btn-delete-bg: #dc3545;
+      --btn-qr-bg: #007bff;
+      --btn-export-bg: #6c757d;
+      --table-border: #ddd;
+      --table-header-bg: #dc3545;
+      --table-header-text: #fff;
+      --highlight-bg: yellow;
+      --error-color: red;
+    }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      text-align: center;
+      transition: background-color 0.3s, color 0.3s;
+    }
+    .container {
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background: var(--container-bg);
+      box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+      border-radius: 10px;
+      transition: background 0.3s;
+    }
+    h2 {
+      color: var(--header-color);
+    }
+    input, select {
+      width: 30%;
+      padding: 10px;
+      margin: 10px 5px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      outline: none;
+      transition: background-color 0.3s, color 0.3s;
+    }
+    .search-box {
+      width: 95%;
+      padding: 10px;
+      margin: 10px auto;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      outline: none;
+      display: block;
+      transition: background-color 0.3s, color 0.3s;
+    }
+    button {
+      padding: 10px 15px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.3s, color 0.3s;
+      margin: 5px;
+    }
+    .btn-add {
+      background-color: var(--btn-add-bg);
+      color: #fff;
+    }
+    .btn-edit {
+      background-color: var(--btn-edit-bg);
+      color: #fff;
+    }
+    .btn-delete {
+      background-color: var(--btn-delete-bg);
+      color: #fff;
+    }
+    .btn-qr {
+      background-color: var(--btn-qr-bg);
+      color: #fff;
+    }
+    .btn-export {
+      background-color: var(--btn-export-bg);
+      color: #fff;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      border: 1px solid var(--table-border);
+      padding: 12px;
+      text-align: center;
+    }
+    th {
+      background-color: var(--table-header-bg);
+      color: var(--table-header-text);
+    }
+    .highlight {
+      background-color: var(--highlight-bg);
+    }
+    .error-msg {
+      color: var(--error-color);
+      font-size: 14px;
+      margin-top: 5px;
+    }
+    /* Dark mode overrides */
+    .dark-mode {
+      --bg-color: #121212;
+      --text-color: #e0e0e0;
+      --container-bg: #1e1e1e;
+      --header-color: #f44336;
+      --btn-add-bg: #4caf50;
+      --btn-edit-bg: #ff9800;
+      --btn-delete-bg: #f44336;
+      --btn-qr-bg: #2196f3;
+      --btn-export-bg: #343a40;
+      --table-border: #555;
+      --table-header-bg: #f44336;
+      --table-header-text: #fff;
+      --highlight-bg: #ffeb3b;
+    }
+    /* Toggle button style */
+    .theme-toggle {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      padding: 8px 12px;
+      background-color: #ccc;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background-color 0.3s, color 0.3s;
+    }
+    /* Modal style for QR Code */
+    .modal {
+      display: none; 
+      position: fixed; 
+      z-index: 1000; 
+      left: 0;
+      top: 0;
+      width: 100%; 
+      height: 100%; 
+      overflow: auto; 
+      background-color: rgba(0,0,0,0.5); 
+    }
+    .modal-content {
+      background-color: #fefefe;
+      margin: 15% auto; 
+      padding: 20px;
+      border: 1px solid #888;
+      width: 300px; 
+      border-radius: 10px;
+      position: relative;
+    }
+    .close {
+      color: #aaa;
+      position: absolute;
+      top: 10px;
+      right: 20px;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <button class="theme-toggle" onclick="toggleTheme()">Toggle Theme</button>
+  <div class="container">
+    <h2>রক্ত দাতার তালিকা</h2>
+    <!-- Input Fields with Error Messages -->
+    <div>
+      <input type="text" id="name" placeholder="নাম লিখুন" />
+      <div id="nameError" class="error-msg"></div>
+    </div>
+    <div>
+      <select id="bloodGroup">
+        <option value="">রক্তের গ্রুপ নির্বাচন করুন</option>
+        <option value="A+">A+</option>
+        <option value="A-">A-</option>
+        <option value="B+">B+</option>
+        <option value="B-">B-</option>
+        <option value="O+">O+</option>
+        <option value="O-">O-</option>
+        <option value="AB+">AB+</option>
+        <option value="AB-">AB-</option>
+      </select>
+      <div id="bloodGroupError" class="error-msg"></div>
+    </div>
+    <div>
+      <input type="text" id="phone" placeholder="মোবাইল নাম্বার" />
+      <div id="phoneError" class="error-msg"></div>
+    </div>
+    <div>
+      <input type="text" id="address" placeholder="ঠিকানা" />
+      <div id="addressError" class="error-msg"></div>
+    </div>
+    <button class="btn-add" onclick="addOrUpdateDonor()">সংযুক্ত করুন</button>
+
+    <!-- Export Buttons -->
+    <div>
+      <button class="btn-export" onclick="exportPDF()">Export as PDF</button>
+      <button class="btn-export" onclick="exportExcel()">Export as Excel</button>
+    </div>
+
+    <input
+      type="text"
+      class="search-box"
+      id="search"
+      placeholder="রক্ত দাতা অনুসন্ধান করুন"
+      onkeyup="loadDonors()"
+    />
+
+    <table>
+      <thead>
+        <tr>
+          <th>নাম</th>
+          <th>রক্তের গ্রুপ</th>
+          <th>মোবাইল নাম্বার</th>
+          <th>ঠিকানা</th>
+          <th>অপশন</th>
+          <th>QR Code</th>
+        </tr>
+      </thead>
+      <tbody id="donorList"></tbody>
+    </table>
+  </div>
+
+  <!-- Modal for QR Code -->
+  <div id="qrModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal()">&times;</span>
+      <div id="qrcode"></div>
+    </div>
+  </div>
+
+  <!-- QRCode.js CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <!-- jsPDF and jsPDF-AutoTable CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+
+  <script>
+    let editIndex = -1;
+    // Apply saved theme on load
+    if (localStorage.getItem('theme') === 'dark') {
+      document.body.classList.add('dark-mode');
+    }
+    document.addEventListener("DOMContentLoaded", loadDonors);
+
+    function toggleTheme() {
+      document.body.classList.toggle('dark-mode');
+      if (document.body.classList.contains('dark-mode')) {
+        localStorage.setItem('theme', 'dark');
+      } else {
+        localStorage.setItem('theme', 'light');
+      }
+    }
+
+    function validateForm(name, bloodGroup, phone, address) {
+      let valid = true;
+      document.getElementById("nameError").innerText = "";
+      document.getElementById("bloodGroupError").innerText = "";
+      document.getElementById("phoneError").innerText = "";
+      document.getElementById("addressError").innerText = "";
+
+      if (!name.trim()) {
+        document.getElementById("nameError").innerText = "নাম অবশ্যই দিতে হবে";
+        valid = false;
+      }
+      if (!bloodGroup.trim()) {
+        document.getElementById("bloodGroupError").innerText = "রক্তের গ্রুপ নির্বাচন করুন";
+        valid = false;
+      }
+      let phoneRegex = /^[0-9]{10,15}$/;
+      if (!phoneRegex.test(phone.trim())) {
+        document.getElementById("phoneError").innerText = "সঠিক মোবাইল নাম্বার প্রদান করুন (10-15 সংখ্যার)";
+        valid = false;
+      }
+      if (!address.trim()) {
+        document.getElementById("addressError").innerText = "ঠিকানা অবশ্যই দিতে হবে";
+        valid = false;
+      }
+      return valid;
+    }
+
+    function addOrUpdateDonor() {
+      let name = document.getElementById("name").value;
+      let bloodGroup = document.getElementById("bloodGroup").value;
+      let phone = document.getElementById("phone").value;
+      let address = document.getElementById("address").value;
+
+      if (!validateForm(name, bloodGroup, phone, address)) {
+        return;
+      }
+
+      let donors = JSON.parse(localStorage.getItem("donors")) || [];
+
+      if (editIndex === -1) {
+        donors.push({ name, bloodGroup, phone, address });
+      } else {
+        donors[editIndex] = { name, bloodGroup, phone, address };
+        editIndex = -1;
+      }
+
+      localStorage.setItem("donors", JSON.stringify(donors));
+      document.getElementById("name").value = "";
+      document.getElementById("bloodGroup").value = "";
+      document.getElementById("phone").value = "";
+      document.getElementById("address").value = "";
+      loadDonors();
+    }
+
+    function highlightText(text, query) {
+      if (!query) return text;
+      let escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      let regex = new RegExp("(" + escapedQuery + ")", "gi");
+      return text.replace(regex, "<span class='highlight'>$1</span>");
+    }
+
+    function loadDonors() {
+      let table = document.getElementById("donorList");
+      table.innerHTML = "";
+      let donors = JSON.parse(localStorage.getItem("donors")) || [];
+      let query = document.getElementById("search").value.trim().toLowerCase();
+
+      donors.forEach((donor, index) => {
+        if (
+          query &&
+          !(
+            donor.name.toLowerCase().includes(query) ||
+            donor.bloodGroup.toLowerCase().includes(query) ||
+            donor.phone.toLowerCase().includes(query) ||
+            donor.address.toLowerCase().includes(query)
+          )
+        ) {
+          return;
+        }
+
+        let row = table.insertRow();
+        let nameHTML = highlightText(donor.name, query);
+        let bloodGroupHTML = highlightText(donor.bloodGroup, query);
+        let phoneHTML = highlightText(donor.phone, query);
+        let addressHTML = highlightText(donor.address, query);
+
+        row.innerHTML = `
+          <td>${nameHTML}</td>
+          <td>${bloodGroupHTML}</td>
+          <td>${phoneHTML}</td>
+          <td>${addressHTML}</td>
+          <td>
+            <button class='btn btn-edit' onclick='editDonor(${index})'>Edit</button>
+            <button class='btn btn-delete' onclick='deleteDonor(${index})'>Delete</button>
+          </td>
+          <td>
+            <button class='btn btn-qr' onclick='generateQRCode(${index})'>QR Code</button>
+          </td>
+        `;
+      });
+    }
+
+    function editDonor(index) {
+      let donors = JSON.parse(localStorage.getItem("donors")) || [];
+      document.getElementById("name").value = donors[index].name;
+      document.getElementById("bloodGroup").value = donors[index].bloodGroup;
+      document.getElementById("phone").value = donors[index].phone;
+      document.getElementById("address").value = donors[index].address;
+      editIndex = index;
+    }
+
+    function deleteDonor(index) {
+      let donors = JSON.parse(localStorage.getItem("donors")) || [];
+      donors.splice(index, 1);
+      localStorage.setItem("donors", JSON.stringify(donors));
+      loadDonors();
+    }
+
+    function generateQRCode(index) {
+      let donors = JSON.parse(localStorage.getItem("donors")) || [];
+      let donor = donors[index];
+      let data = `নাম: ${donor.name}\nরক্তের গ্রুপ: ${donor.bloodGroup}\nমোবাইল: ${donor.phone}\nঠিকানা: ${donor.address}`;
+      
+      document.getElementById("qrcode").innerHTML = "";
+      
+      new QRCode(document.getElementById("qrcode"), {
+        text: data,
+        width: 200,
+        height: 200
+      });
+      
+      document.getElementById("qrModal").style.display = "block";
+    }
+
+    function closeModal() {
+      document.getElementById("qrModal").style.display = "none";
+    }
+
+    // Export table data as PDF using jsPDF and AutoTable
+    async function exportPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      // Create an array of table headers
+      const headers = [["নাম", "রক্তের গ্রুপ", "মোবাইল", "ঠিকানা"]];
+      
+      // Create an array of rows from donor data
+      let donors = JSON.parse(localStorage.getItem("donors")) || [];
+      const data = donors.map(donor => [donor.name, donor.bloodGroup, donor.phone, donor.address]);
+      
+      // Use autoTable plugin to generate table in PDF
+      doc.autoTable({
+        head: headers,
+        body: data,
+        startY: 20
+      });
+      doc.text("রক্ত দাতার তালিকা", 14, 15);
+      doc.save("donors.pdf");
+    }
+
+    // Export table data as CSV (Excel)
+    function exportExcel() {
+      let donors = JSON.parse(localStorage.getItem("donors")) || [];
+      let csv = "নাম,রক্তের গ্রুপ,মোবাইল,ঠিকানা\n";
+      donors.forEach(donor => {
+        csv += `"${donor.name}","${donor.bloodGroup}","${donor.phone}","${donor.address}"\n`;
+      });
+      
+      let blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      let link = document.createElement("a");
+      if (link.download !== undefined) { // feature detection
+        let url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", "donors.csv");
+        link.style.visibility = "hidden";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    }
+  </script>
+</body>
+</html>
